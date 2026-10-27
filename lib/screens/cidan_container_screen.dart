@@ -41,36 +41,7 @@ class _CidanContainerScreenState extends State<CidanContainerScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: AppTheme.indianBankBlue,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-            tooltip: 'Back to Profile',
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          title: Row(
-            children: const [
-              Icon(
-                Icons.shield_outlined,
-                color: AppTheme.indianBankYellow,
-                size: 20,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'CIDAN Compliance AI',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                ),
-              ),
-            ],
-          ),
-        ),
+
         body: Navigator(
           key: _cidanNavKey,
           onGenerateRoute: (settings) {
