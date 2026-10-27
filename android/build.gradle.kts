@@ -16,6 +16,18 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 subprojects {
+    project.plugins.withId("com.android.library") {
+        if (!project.plugins.hasPlugin("org.jetbrains.kotlin.android") &&
+            project.file("src/main/kotlin").exists()
+        ) {
+            project.plugins.apply("org.jetbrains.kotlin.android")
+        }
+    }
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
     project.evaluationDependsOn(":app")
 }
 

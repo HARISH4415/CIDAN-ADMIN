@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'cidan_container_screen.dart';
 import '../theme/app_theme.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -9,6 +11,7 @@ class ProfileScreen extends StatelessWidget {
   final VoidCallback? onLogout;
   final Uint8List? profileImageBytes;
   final ValueChanged<Uint8List?>? onProfileImageChanged;
+  final VoidCallback? onCidanTap;
 
   const ProfileScreen({
     super.key,
@@ -17,6 +20,7 @@ class ProfileScreen extends StatelessWidget {
     this.onLogout,
     this.profileImageBytes,
     this.onProfileImageChanged,
+    this.onCidanTap,
   });
 
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
@@ -42,6 +46,28 @@ class ProfileScreen extends StatelessWidget {
         );
       }
     }
+  }
+
+  Future<void> _openCidan(BuildContext context) async {
+    if (onCidanTap != null) {
+      onCidanTap!();
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('cidan_is_logged_in') ?? false;
+    final savedEmail = prefs.getString('cidan_user_email') ?? '';
+
+    if (!context.mounted) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CidanContainerScreen(
+          userEmail: (isLoggedIn && savedEmail.isNotEmpty) ? savedEmail : '',
+          isLoggedIn: isLoggedIn && savedEmail.isNotEmpty,
+        ),
+      ),
+    );
   }
 
   void _showImagePickerModal(BuildContext context) {
@@ -225,7 +251,7 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 14),
 
                 // Menu Group 1: Personal, Contact, Bank & Role, Cidan (Dark Blue Icons)
-                _buildMenuGroup([
+                _buildMenuGroup(context, [
                   _MenuOption(
                     icon: Icons.person_rounded,
                     iconColor: AppTheme.indianBankBlue,
@@ -252,13 +278,46 @@ class ProfileScreen extends StatelessWidget {
                     iconColor: AppTheme.indianBankBlue,
                     iconBgColor: const Color(0xFFE8F1FF),
                     title: 'Cidan',
-                    subtitle: 'Regulatory & Compliance',
+                    subtitle: 'Regulatory Compliance & Policy AI Engine',
+                    badge: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0F2FE),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: const Color(0xFFBAE6FD),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            size: 10,
+                            color: Color(0xFF0284C7),
+                          ),
+                          SizedBox(width: 3),
+                          Text(
+                            'AI Engine',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ]),
                 const SizedBox(height: 12),
 
                 // Menu Group 2: Notifications, App Preferences, Help & Support, About (Dark Blue Icons)
-                _buildMenuGroup([
+                _buildMenuGroup(context, [
                   _MenuOption(
                     icon: Icons.notifications_none_rounded,
                     iconColor: AppTheme.indianBankBlue,
@@ -656,7 +715,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuGroup(List<_MenuOption> options) {
+  Widget _buildMenuGroup(BuildContext context, List<_MenuOption> options) {
     return Container(
       decoration: AppTheme.cardDecoration(radius: 14),
       child: Column(
@@ -668,7 +727,13 @@ class ProfileScreen extends StatelessWidget {
           return Column(
             children: [
               InkWell(
-                onTap: () => onOptionTap?.call(option.title),
+                onTap: () {
+                  if (option.title.toLowerCase() == 'cidan') {
+                    _openCidan(context);
+                  } else {
+                    onOptionTap?.call(option.title);
+                  }
+                },
                 borderRadius: BorderRadius.vertical(
                   top: index == 0 ? const Radius.circular(14) : Radius.zero,
                   bottom: isLast ? const Radius.circular(14) : Radius.zero,
@@ -695,18 +760,26 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Title & Subtitle
+                      // Title, Badge & Subtitle
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              option.title,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textDark,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  option.title,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                                if (option.badge != null) ...[
+                                  const SizedBox(width: 6),
+                                  option.badge!,
+                                ],
+                              ],
                             ),
                             const SizedBox(height: 1),
                             Text(
@@ -748,6 +821,7 @@ class _MenuOption {
   final Color iconBgColor;
   final String title;
   final String subtitle;
+  final Widget? badge;
 
   const _MenuOption({
     required this.icon,
@@ -755,5 +829,6 @@ class _MenuOption {
     required this.iconBgColor,
     required this.title,
     required this.subtitle,
+    this.badge,
   });
 }

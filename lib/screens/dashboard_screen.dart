@@ -8,6 +8,8 @@ import '../widgets/charts_section.dart';
 import '../widgets/quick_actions_section.dart';
 import '../widgets/activity_section.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'cidan_container_screen.dart';
 import 'profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -20,6 +22,23 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentNavIndex = 0;
   Uint8List? _profileImageBytes;
+
+  Future<void> _openCidanSuite() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('cidan_is_logged_in') ?? false;
+    final savedEmail = prefs.getString('cidan_user_email') ?? '';
+
+    if (!mounted) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CidanContainerScreen(
+          userEmail: (isLoggedIn && savedEmail.isNotEmpty) ? savedEmail : '',
+          isLoggedIn: isLoggedIn && savedEmail.isNotEmpty,
+        ),
+      ),
+    );
+  }
 
   void _showNotificationSnackBar(String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -74,8 +93,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   });
                 },
                 onOptionTap: (option) {
-                  _showNotificationSnackBar('Opened: $option');
+                  if (option.toLowerCase() == 'cidan') {
+                    _openCidanSuite();
+                  } else {
+                    _showNotificationSnackBar('Opened: $option');
+                  }
                 },
+                onCidanTap: _openCidanSuite,
                 onLogout: () {
                   _showLogoutConfirmationDialog(context);
                 },
@@ -146,7 +170,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: const [
               Icon(Icons.logout_rounded, color: Color(0xFFEF4444)),
@@ -164,18 +190,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppTheme.textMuted),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFEF4444),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: () {
                 Navigator.pop(ctx);
                 _showNotificationSnackBar('Logged out successfully');
               },
-              child: const Text('Logout', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -226,7 +260,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildBranchTile(String name, String code, bool isSelected, BuildContext ctx) {
+  Widget _buildBranchTile(
+    String name,
+    String code,
+    bool isSelected,
+    BuildContext ctx,
+  ) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       leading: Container(
@@ -249,7 +288,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           fontSize: 14,
         ),
       ),
-      subtitle: Text('Branch Code: $code', style: const TextStyle(fontSize: 12)),
+      subtitle: Text(
+        'Branch Code: $code',
+        style: const TextStyle(fontSize: 12),
+      ),
       trailing: isSelected
           ? const Icon(Icons.check_circle_rounded, color: AppTheme.primaryBlue)
           : null,

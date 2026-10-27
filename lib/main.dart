@@ -5,7 +5,7 @@ import 'screens/dashboard_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set system UI overlay style to match Indian Bank corporate blue status bar
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
