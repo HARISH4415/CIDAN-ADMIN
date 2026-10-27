@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cidan/cidan.dart';
-import '../theme/app_theme.dart';
 
 /// Container screen that safely hosts the CIDAN Compliance AI Suite.
 ///
